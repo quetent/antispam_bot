@@ -96,7 +96,7 @@ class Bot(vk_api.VkApi):
 			return
 
 		if text.startswith('!') and user_id in config.bot_admins:
-			self._execute_command(chat_id, message_id, text[1:], event)
+			self._execute_command(user_id, chat_id, message_id, text[1:], event)
 		else:
 			if user_id not in config.bot_admins:
 				try:
@@ -104,26 +104,28 @@ class Bot(vk_api.VkApi):
 				except Exception:
 					pass
 
-	def _execute_command(self, chat_id, message_id, text, event):
+	def _execute_command(self, user_id, chat_id, message_id, text, event):
 
 		if text == 'кик собак':
 			self._kick_dogs(chat_id, text)
-		elif text == 'размут':
-			self._unmute_user(str(event.object['message']['reply_message']['from_id']), chat_id)
-		elif text == 'мут':
-			self._mute_user(str(event.object['message']['reply_message']['from_id']), chat_id)
-		elif text == 'варн' or text == 'пред':
-			self._warn_user(str(event.object['message']['reply_message']['from_id']), chat_id)
-		elif text == 'анварн' or text == 'разпред':
-			self._unwarn_user(str(event.object['message']['reply_message']['from_id']), chat_id)
 		else:
-			forward = json.dumps({
-					   'peer_id' : 2000000000 + chat_id,
-					   'conversation_message_ids' : message_id,
-					   'is_reply' : True
-					  })
+			if user_id in config.bot_admins:
+				if text == 'размут':
+					self._unmute_user(str(event.object['message']['reply_message']['from_id']), chat_id)
+				elif text == 'мут':
+					self._mute_user(str(event.object['message']['reply_message']['from_id']), chat_id)
+				elif text == 'варн' or text == 'пред':
+					self._warn_user(str(event.object['message']['reply_message']['from_id']), chat_id)
+				elif text == 'анварн' or text == 'разпред':
+					self._unwarn_user(str(event.object['message']['reply_message']['from_id']), chat_id)
+			else:
+				forward = json.dumps({
+						   'peer_id' : 2000000000 + chat_id,
+						   'conversation_message_ids' : message_id,
+						   'is_reply' : True
+						  })
 
-			self._send_message(chat_id=chat_id, forward=forward, message='таких команд не знаю')
+				self._send_message(chat_id=chat_id, forward=forward, message='таких команд не знаю')
 
 	def _unmute_user(self, user_id, chat_id):
 
